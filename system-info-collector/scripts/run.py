@@ -55,14 +55,38 @@ def run(args: dict) -> dict:
             if os.path.exists(app_dir):
                 installed_apps = [f for f in os.listdir(app_dir) if f.endswith(".app")]
 
-        result = {
-            "os_info": os_info,
-            "cpu_info": cpu_info,
-            "memory_info": memory_info,
-            "disk_info": disk_info,
-            "installed_apps": installed_apps[:50] # 最多返回50个避免过长
-        }
+        # 格式化输出为易读文本
+        output_text = "=== 本地软硬件信息收集结果 ===\n\n"
+        output_text += "📌 操作系统信息：\n"
+        output_text += f"- 系统：{os_info['name']} {os_info['release']}\n"
+        output_text += f"- 版本：{os_info['version']}\n"
+        output_text += f"- 架构：{os_info['architecture']}\n"
+        output_text += f"- 主机名：{os_info['hostname']}\n\n"
 
-        return {"output": json.dumps(result, ensure_ascii=False, indent=2), "success": True}
+        output_text += "⚡ CPU信息：\n"
+        output_text += f"- 型号：{cpu_info['model']}\n"
+        output_text += f"- 物理核心：{cpu_info['physical_cores']} 核\n"
+        output_text += f"- 逻辑核心：{cpu_info['logical_cores']} 核\n"
+        output_text += f"- 当前使用率：{cpu_info['usage_percent']}%\n\n"
+
+        output_text += "🧠 内存信息：\n"
+        output_text += f"- 总容量：{memory_info['total_gb']} GB\n"
+        output_text += f"- 已使用：{memory_info['used_gb']} GB\n"
+        output_text += f"- 可用：{memory_info['available_gb']} GB\n"
+        output_text += f"- 使用率：{memory_info['usage_percent']}%\n\n"
+
+        output_text += "💽 磁盘信息：\n"
+        for disk in disk_info:
+            if disk['mount_point'] == "/" or disk['mount_point'] == "/System/Volumes/Data":
+                output_text += f"- 挂载点 {disk['mount_point']}：总容量 {disk['total_gb']} GB，已用 {disk['used_gb']} GB，可用 {disk['available_gb']} GB，使用率 {disk['usage_percent']}%\n"
+        output_text += "\n"
+
+        output_text += "📦 已安装软件（部分）：\n"
+        for app in installed_apps[:10]:
+            output_text += f"- {app[:-4]}\n"
+        if len(installed_apps) > 10:
+            output_text += f"... 共 {len(installed_apps)} 个软件\n"
+
+        return {"output": output_text, "success": True}
     except Exception as e:
         return {"output": f"收集信息失败：{str(e)}", "success": False}
